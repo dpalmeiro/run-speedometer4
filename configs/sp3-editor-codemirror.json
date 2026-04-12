@@ -3,12 +3,12 @@
   "description": "Speedometer 3 Editor-CodeMirror suite",
   "unit": "runs/min",
   "higher_is_better": true,
-  "command": ["run-speedometer", "--iterations", "10", "--suite", "Editor-CodeMirror"],
+  "command": ["run-speedometer", "--iterations", "100", "--suite", "Editor-CodeMirror"],
   "browsers": ["firefox"],
   "binary": {"type": "arg", "flag": "--firefox"},
   "modes": {
     "profile": {
-      "command": ["run-speedometer", "--iterations", "5", "--suite", "Editor-CodeMirror"]
+      "command": ["run-speedometer", "--iterations", "100", "--suite", "Editor-CodeMirror"]
     }
   }
 }

@@ -3,12 +3,12 @@
   "description": "Speedometer 3 Perf-Dashboard suite",
   "unit": "runs/min",
   "higher_is_better": true,
-  "command": ["run-speedometer", "--iterations", "10", "--suite", "Perf-Dashboard"],
+  "command": ["run-speedometer", "--iterations", "100", "--suite", "Perf-Dashboard"],
   "browsers": ["firefox"],
   "binary": {"type": "arg", "flag": "--firefox"},
   "modes": {
     "profile": {
-      "command": ["run-speedometer", "--iterations", "5", "--suite", "Perf-Dashboard"]
+      "command": ["run-speedometer", "--iterations", "100", "--suite", "Perf-Dashboard"]
     }
   }
 }
