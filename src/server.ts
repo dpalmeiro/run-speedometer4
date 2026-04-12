@@ -31,7 +31,8 @@ export interface ServerHandle {
   close(): void;
 }
 
-export function startServer(): Promise<ServerHandle> {
+export function startServer(opts: { verbose?: boolean } = {}): Promise<ServerHandle> {
+  const { verbose = false } = opts;
   return new Promise((resolve, reject) => {
     let reportResolve: ((payload: ReportPayload) => void) | null = null;
     let reportReject: ((err: Error) => void) | null = null;
@@ -52,7 +53,7 @@ export function startServer(): Promise<ServerHandle> {
       const url = req.url ?? '/';
 
       if (req.method === 'POST' && url === '/started') {
-        process.stderr.write(`[claudometer] benchmark started\n`);
+        if (verbose) process.stdout.write(`[run-speedometer] benchmark started\n`);
         res.writeHead(200);
         res.end('{}');
         return;
@@ -67,6 +68,7 @@ export function startServer(): Promise<ServerHandle> {
             clearTimeout(timeout);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end('{}');
+            if (verbose) process.stdout.write(`[run-speedometer] report received\n`);
             reportResolve!(payload);
           } catch (e) {
             clearTimeout(timeout);

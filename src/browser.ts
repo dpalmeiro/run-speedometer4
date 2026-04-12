@@ -78,8 +78,9 @@ export async function launchBrowser(
   binaryPath: string,
   url: string,
   samplyOutput?: string,
+  verbose?: boolean,
 ): Promise<BrowserHandle> {
-  const profileDir = mkdtempSync(join(tmpdir(), 'claudometer-'));
+  const profileDir = mkdtempSync(join(tmpdir(), 'run-speedometer-'));
 
   let proc: ChildProcess;
 
@@ -103,7 +104,6 @@ export async function launchBrowser(
   }
 
   const stderrChunks: Buffer[] = [];
-  const verbose = !!process.env.LUMIX_VERBOSE;
   proc.stderr?.on('data', (chunk: Buffer) => {
     stderrChunks.push(chunk);
     if (verbose) process.stderr.write(chunk);

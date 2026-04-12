@@ -10,6 +10,7 @@ export function runCommand(): Command {
     .option('--iterations <n>', 'Number of SP3 iterations', '10')
     .option('--suite <name>', 'Run a single SP3 suite (e.g. NewsSite-Nuxt)')
     .option('--samply <output>', 'Record a samply profile and save to this path')
+    .option('--verbose', 'Print progress updates to stdout')
     .action(async (opts) => {
       let binary: string;
       let browserName: BrowserName;
@@ -36,14 +37,17 @@ export function runCommand(): Command {
         process.exit(1);
       }
 
+      const verbose: boolean = !!opts.verbose;
+
       let server;
       let browser;
       let exitCode = 0;
       try {
-        server = await startServer();
+        server = await startServer({ verbose });
         const suiteParam = opts.suite ? `&suites=${encodeURIComponent(opts.suite)}` : '';
         const url = `http://127.0.0.1:${server.port}/?iterationCount=${iterations}&startAutomatically${suiteParam}`;
-        browser = await launchBrowser(browserName, binary, url, opts.samply);
+        if (verbose) process.stdout.write(`[run-speedometer] launching ${browserName}: ${url}\n`);
+        browser = await launchBrowser(browserName, binary, url, opts.samply, verbose);
 
         const payload = await Promise.race([server.waitForReport(), browser.exited]);
         const score = extractScore(payload);

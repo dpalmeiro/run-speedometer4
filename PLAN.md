@@ -1,4 +1,4 @@
-# claudometer
+# run-speedometer
 
 SP3 test runner for lumix. Serves Speedometer3 locally, launches a browser, waits
 for the benchmark to finish, and prints `{ "score": <number> }` to stdout.
@@ -8,7 +8,7 @@ for the benchmark to finish, and prints `{ "score": <number> }` to stdout.
 ## Architecture
 
 ```
-claudometer/
+run-speedometer/
 ├── speedometer/           # SP3 source with XHR patch already applied
 ├── src/
 │   ├── cli.ts             # entry point
@@ -16,20 +16,20 @@ claudometer/
 │   ├── server.ts          # HTTP server: static files + /report + /shutdown
 │   ├── browser.ts         # Playwright browser launcher
 │   └── commands/
-│       └── run.ts         # claudometer run [options]
+│       └── run.ts         # run-speedometer run [options]
 └── package.json
 ```
 
 ## Usage
 
 ```
-claudometer run --binary /path/to/firefox --browser firefox --iterations 10
+run-speedometer run --binary /path/to/firefox --browser firefox --iterations 10
 ```
 
 Or via env var:
 
 ```
-BROWSER_BINARY=/path/to/firefox claudometer run --browser firefox
+BROWSER_BINARY=/path/to/firefox run-speedometer run --browser firefox
 ```
 
 ## Output
@@ -45,7 +45,7 @@ BROWSER_BINARY=/path/to/firefox claudometer run --browser firefox
   "name": "speedometer3",
   "unit": "score",
   "higher_is_better": true,
-  "command": ["claudometer", "run", "--browser", "firefox", "--iterations", "10"],
+  "command": ["run-speedometer", "run", "--browser", "firefox", "--iterations", "10"],
   "browsers": ["firefox"],
   "binary": { "type": "arg", "flag": "--binary" }
 }
