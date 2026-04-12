@@ -6,6 +6,7 @@
     "run-speedometer": "./dist/cli.js"
   },
   "scripts": {
+    "setup": "git submodule update --init && npm install && npm run build && npm link",
     "build": "tsc && chmod +x dist/cli.js",
     "dev": "tsc --watch",
     "test": "vitest run",
