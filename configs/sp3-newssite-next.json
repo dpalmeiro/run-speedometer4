@@ -1,0 +1,14 @@
+{
+  "name": "speedometer3-newssite-next",
+  "description": "Speedometer 3 NewsSite-Next suite",
+  "unit": "runs/min",
+  "higher_is_better": true,
+  "command": ["run-speedometer", "--iterations", "10", "--suite", "NewsSite-Next"],
+  "browsers": ["firefox"],
+  "binary": {"type": "arg", "flag": "--firefox"},
+  "modes": {
+    "profile": {
+      "command": ["run-speedometer", "--iterations", "5", "--suite", "NewsSite-Next"]
+    }
+  }
+}

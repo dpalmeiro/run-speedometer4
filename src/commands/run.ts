@@ -5,19 +5,28 @@ import { launchBrowser, type BrowserName } from '../browser.js';
 export function runCommand(): Command {
   return new Command('run')
     .description('Run Speedometer3 and output score as JSON')
-    .option('--binary <path>', 'Path to browser binary (or set BROWSER_BINARY env var)')
-    .option('--browser <name>', 'Browser to use: firefox or chrome', 'firefox')
+    .option('--firefox <path>', 'Path to Firefox binary (or BROWSER_BINARY env var)')
+    .option('--chrome <path>', 'Path to Chrome binary (or BROWSER_BINARY env var)')
     .option('--iterations <n>', 'Number of SP3 iterations', '10')
+    .option('--suite <name>', 'Run a single SP3 suite (e.g. NewsSite-Nuxt)')
+    .option('--samply <output>', 'Record a samply profile and save to this path')
     .action(async (opts) => {
-      const binary: string = opts.binary ?? process.env.BROWSER_BINARY ?? '';
-      if (!binary) {
-        console.error(JSON.stringify({ error: 'No binary specified. Use --binary or BROWSER_BINARY env var.' }));
-        process.exit(1);
+      let binary: string;
+      let browserName: BrowserName;
+
+      if (opts.firefox) {
+        binary = opts.firefox;
+        browserName = 'firefox';
+      } else if (opts.chrome) {
+        binary = opts.chrome;
+        browserName = 'chrome';
+      } else {
+        binary = process.env.BROWSER_BINARY ?? '';
+        browserName = 'firefox';
       }
 
-      const browserName = opts.browser as BrowserName;
-      if (browserName !== 'firefox' && browserName !== 'chrome') {
-        console.error(JSON.stringify({ error: `Unsupported browser: ${opts.browser}` }));
+      if (!binary) {
+        console.error(JSON.stringify({ error: 'No binary specified. Use --firefox, --chrome, or BROWSER_BINARY env var.' }));
         process.exit(1);
       }
 
@@ -32,10 +41,11 @@ export function runCommand(): Command {
       let exitCode = 0;
       try {
         server = await startServer();
-        const url = `http://127.0.0.1:${server.port}/?iterationCount=${iterations}`;
-        browser = await launchBrowser(browserName, binary, url);
+        const suiteParam = opts.suite ? `&suites=${encodeURIComponent(opts.suite)}` : '';
+        const url = `http://127.0.0.1:${server.port}/?iterationCount=${iterations}&startAutomatically${suiteParam}`;
+        browser = await launchBrowser(browserName, binary, url, opts.samply);
 
-        const payload = await server.waitForReport();
+        const payload = await Promise.race([server.waitForReport(), browser.exited]);
         const score = extractScore(payload);
         console.log(JSON.stringify({ score }));
       } catch (e) {

@@ -23,7 +23,7 @@ export interface ReportPayload {
   };
 }
 
-const REPORT_TIMEOUT_MS = 2 * 60 * 1000;
+const REPORT_TIMEOUT_MS = 20 * 60 * 1000;
 
 export interface ServerHandle {
   port: number;
@@ -50,6 +50,13 @@ export function startServer(): Promise<ServerHandle> {
 
     server = createServer((req: IncomingMessage, res: ServerResponse) => {
       const url = req.url ?? '/';
+
+      if (req.method === 'POST' && url === '/started') {
+        process.stderr.write(`[claudometer] benchmark started\n`);
+        res.writeHead(200);
+        res.end('{}');
+        return;
+      }
 
       if (req.method === 'POST' && url === '/report') {
         let body = '';
@@ -107,7 +114,7 @@ export function startServer(): Promise<ServerHandle> {
       resolve({
         port: addr.port,
         waitForReport: () => reportPromise,
-        close: () => server.close(),
+        close: () => { clearTimeout(timeout); server.close(); },
       });
     });
   });

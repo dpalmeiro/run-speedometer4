@@ -1,9 +1,9 @@
 {
-  "name": "claudometer",
+  "name": "run-speedometer",
   "version": "0.1.0",
   "type": "module",
   "bin": {
-    "claudometer": "./dist/cli.js"
+    "run-speedometer": "./dist/cli.js"
   },
   "scripts": {
     "build": "tsc && chmod +x dist/cli.js",
