@@ -1,7 +1,7 @@
 import { spawn, spawnSync, ChildProcess } from 'child_process';
 import { mkdtempSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
-import { join } from 'path';
+import { dirname, join } from 'path';
 
 export type BrowserName = 'firefox' | 'chrome';
 
@@ -64,13 +64,34 @@ async function activateOnMac(pid: number): Promise<void> {
 }
 
 function waitForExit(proc: ChildProcess, timeoutMs: number): Promise<void> {
-  return Promise.race([
-    new Promise<void>((resolve) => {
-      proc.once('exit', () => resolve());
-      proc.once('error', () => resolve());
-    }),
-    new Promise<void>((resolve) => setTimeout(resolve, timeoutMs)),
-  ]);
+  if (proc.exitCode !== null || proc.signalCode !== null) {
+    return Promise.resolve();
+  }
+  return new Promise<void>((resolve) => {
+    let interval: NodeJS.Timeout;
+    let timeout: NodeJS.Timeout;
+    const finish = () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+      proc.off('exit', finish);
+      proc.off('error', finish);
+      resolve();
+    };
+    proc.once('exit', finish);
+    proc.once('error', finish);
+    interval = setInterval(() => {
+      if (!proc.pid) {
+        finish();
+        return;
+      }
+      try {
+        process.kill(proc.pid, 0);
+      } catch {
+        finish();
+      }
+    }, 100);
+    timeout = setTimeout(finish, timeoutMs);
+  });
 }
 
 export async function launchBrowser(
@@ -82,26 +103,50 @@ export async function launchBrowser(
 ): Promise<BrowserHandle> {
   const profileDir = mkdtempSync(join(tmpdir(), 'run-speedometer-'));
 
-  let proc: ChildProcess;
+  let browserArgs: string[];
+  let browserEnv = process.env;
 
   if (browserName === 'firefox') {
     writeFirefoxUserJs(profileDir);
-    proc = spawn(binaryPath, ['-no-remote', '-profile', profileDir, url], {
-      detached: false,
-      stdio: ['ignore', 'ignore', 'pipe'],
-      env: { ...process.env, MOZ_ENABLE_WAYLAND: '0' },
-    });
+    browserArgs = ['-no-remote', '-profile', profileDir, url];
+    browserEnv = { ...process.env, MOZ_ENABLE_WAYLAND: '0' };
+    if (samplyOutput) {
+      browserEnv.IONPERF = 'func';
+      browserEnv.PERF_SPEW_DIR = dirname(samplyOutput);
+      browserEnv.MOZ_USE_PERFORMANCE_MARKER_FILE = '1';
+      browserEnv.MOZ_PERFORMANCE_MARKER_DIR = profileDir;
+      browserEnv.MOZ_DISABLE_CONTENT_SANDBOX = '1';
+    }
   } else {
-    proc = spawn(binaryPath, [
+    const enableJitProfile = !!samplyOutput || process.env.RUN_SPEEDOMETER_JIT_PROFILE === '1';
+    browserArgs = [
       `--user-data-dir=${profileDir}`,
       '--no-first-run',
       '--no-default-browser-check',
+      '--no-sandbox',
+      ...(enableJitProfile ? [
+        '--js-flags=--perf-prof --perf-prof-unwinding-info --interpreted-frames-native-stack',
+      ] : []),
       url,
-    ], {
-      detached: false,
-      stdio: ['ignore', 'ignore', 'pipe'],
-    });
+    ];
   }
+
+  const wrapWithSamply = !!samplyOutput;
+  const command = wrapWithSamply ? 'samply' : binaryPath;
+  const commandArgs = wrapWithSamply ? [
+    'record',
+    '--save-only',
+    '--jit-markers',
+    '--presymbolicate',
+    '--duration', '45',
+    '-o', samplyOutput,
+    '--', binaryPath, ...browserArgs,
+  ] : browserArgs;
+  const proc = spawn(command, commandArgs, {
+    detached: wrapWithSamply,
+    stdio: ['ignore', 'ignore', 'pipe'],
+    env: browserEnv,
+  });
 
   const stderrChunks: Buffer[] = [];
   proc.stderr?.on('data', (chunk: Buffer) => {
@@ -126,34 +171,20 @@ export async function launchBrowser(
     });
   });
 
-  proc.unref();
   if (proc.pid) activateOnMac(proc.pid);
-
-  let samplyProc: ChildProcess | undefined;
-  if (samplyOutput && proc.pid) {
-    // Give Firefox a moment to initialize before attaching samply
-    await new Promise<void>((resolve) => setTimeout(resolve, 2000));
-    samplyProc = spawn('samply', [
-      'record', '--save-only', '-o', samplyOutput, '-p', String(proc.pid),
-    ], {
-      detached: false,
-      stdio: 'ignore',
-    });
-    samplyProc.unref();
-  }
 
   return {
     exited,
     close: async () => {
       intentionalClose = true;
-      // Kill Firefox; samply (attached via -p) will detect the exit and save automatically.
-      try { proc.kill('SIGTERM'); } catch { /* already dead */ }
-      if (!processExited) await waitForExit(proc, 30_000);
-
-      // Wait for samply to finish writing the profile (up to 60s for large profiles).
-      if (samplyProc) {
-        await waitForExit(samplyProc, 60_000);
+      if (wrapWithSamply) {
+        if (!processExited && proc.pid) {
+          try { process.kill(-proc.pid, 'SIGINT'); } catch { /* already dead */ }
+        }
+      } else {
+        try { proc.kill('SIGTERM'); } catch { /* already dead */ }
       }
+      if (!processExited) await waitForExit(proc, wrapWithSamply ? 300_000 : 30_000);
 
       try { rmSync(profileDir, { recursive: true, force: true }); } catch { /* ignore */ }
     },

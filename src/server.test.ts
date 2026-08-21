@@ -54,6 +54,17 @@ describe('startServer — /report and /shutdown', () => {
     expect(res.status).toBe(200);
     const text = await res.text();
     expect(text).toContain('<!DOCTYPE html>');
+    expect(text).toContain('<script src="/run-speedometer-client.mjs" type="module"></script>');
+    server.close();
+  });
+
+  it('serves the benchmark reporting integration', async () => {
+    const server = await startServer();
+    const res = await fetch(`http://127.0.0.1:${server.port}/run-speedometer-client.mjs`);
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toBe('application/javascript');
+    expect(await res.text()).toContain("fetch('/report'");
     server.close();
   });
 

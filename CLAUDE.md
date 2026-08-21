@@ -34,7 +34,7 @@ On macOS, pass `.app` bundles — the browser launcher handles them directly via
 
 1. Binds an HTTP server to a random localhost port
 2. Launches the browser pointing at `http://127.0.0.1:<port>/?iterationCount=N&startAutomatically`
-3. A patch in `speedometer/resources/benchmark-runner.mjs` hooks `didFinishLastIteration()` and POSTs results to `/report`
+3. The server injects a small integration module that hooks `didFinishLastIteration()` and POSTs results to `/report`
 4. Server extracts the mean score and the CLI prints `{ "score": <number> }`
 
 ## Configs

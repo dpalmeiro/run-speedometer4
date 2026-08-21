@@ -1,5 +1,5 @@
 import { createServer, IncomingMessage, ServerResponse } from 'http';
-import { createReadStream, existsSync, statSync } from 'fs';
+import { createReadStream, existsSync, readFileSync, statSync } from 'fs';
 import { join, extname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -14,6 +14,32 @@ const MIME: Record<string, string> = {
 };
 
 const SP3_DIR = join(fileURLToPath(import.meta.url), '../../speedometer');
+const CLIENT_PATH = '/run-speedometer-client.mjs';
+const CLIENT_SCRIPT = `
+const client = globalThis.benchmarkClient;
+if (!client) throw new Error('Speedometer benchmark client was not initialized');
+
+const willStartFirstIteration = client.willStartFirstIteration.bind(client);
+client.willStartFirstIteration = async (...args) => {
+  await fetch('/started', { method: 'POST' });
+  return willStartFirstIteration(...args);
+};
+
+const didFinishLastIteration = client.didFinishLastIteration.bind(client);
+client.didFinishLastIteration = async (metrics, ...args) => {
+  didFinishLastIteration(metrics, ...args);
+  const scores = metrics?.Score?.values;
+  if (!Array.isArray(scores) || scores.length === 0)
+    throw new Error('Speedometer did not produce score values');
+  await fetch('/report', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      'Speedometer-3': { metrics: { Score: { current: [scores] } } },
+    }),
+  });
+};
+`;
 
 export interface ReportPayload {
   'Speedometer-3': {
@@ -45,12 +71,18 @@ export function startServer(opts: { verbose?: boolean } = {}): Promise<ServerHan
     let server: ReturnType<typeof createServer>;
 
     const timeout = setTimeout(() => {
-      reportReject!(new Error('Timed out after 2 minutes waiting for benchmark report'));
+      reportReject!(new Error('Timed out after 20 minutes waiting for benchmark report'));
       server.close();
     }, REPORT_TIMEOUT_MS);
 
     server = createServer((req: IncomingMessage, res: ServerResponse) => {
       const url = req.url ?? '/';
+
+      if (req.method === 'GET' && url === CLIENT_PATH) {
+        res.writeHead(200, { 'Content-Type': 'application/javascript' });
+        res.end(CLIENT_SCRIPT);
+        return;
+      }
 
       if (req.method === 'POST' && url === '/started') {
         if (verbose) process.stdout.write(`[run-speedometer] benchmark started\n`);
@@ -103,6 +135,14 @@ export function startServer(opts: { verbose?: boolean } = {}): Promise<ServerHan
 
       const mime = MIME[extname(resolvedPath)] ?? 'application/octet-stream';
       res.writeHead(200, { 'Content-Type': mime });
+      if (resolvedPath === join(SP3_DIR, 'index.html')) {
+        const html = readFileSync(resolvedPath, 'utf8').replace(
+          '</head>',
+          `        <script src="${CLIENT_PATH}" type="module"></script>\n    </head>`,
+        );
+        res.end(html);
+        return;
+      }
       createReadStream(resolvedPath).pipe(res);
     });
 

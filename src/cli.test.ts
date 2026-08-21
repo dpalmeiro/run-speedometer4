@@ -11,17 +11,17 @@ describe('CLI', () => {
     expect(program.version()).toBe('0.1.0');
   });
 
-  it('"run" has --binary option', () => {
+  it('"run" has --firefox option', () => {
     const run = program.commands.find((c) => c.name() === 'run');
     expect(run).toBeDefined();
     const optionNames = run!.options.map((o) => o.long);
-    expect(optionNames).toContain('--binary');
+    expect(optionNames).toContain('--firefox');
   });
 
-  it('"run" has --browser option', () => {
+  it('"run" has --chrome option', () => {
     const run = program.commands.find((c) => c.name() === 'run');
     const optionNames = run!.options.map((o) => o.long);
-    expect(optionNames).toContain('--browser');
+    expect(optionNames).toContain('--chrome');
   });
 
   it('"run" has --iterations option', () => {
