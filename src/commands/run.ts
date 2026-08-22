@@ -2,12 +2,22 @@ import { Command } from 'commander';
 import { startServer, extractScore } from '../server.js';
 import { launchBrowser, type BrowserName } from '../browser.js';
 
+export function resolveIterations(value: string | undefined, suite?: string): number {
+  const minimum = suite ? 100 : 10;
+  const iterations = value === undefined ? minimum : Number(value);
+  if (!Number.isInteger(iterations) || iterations < minimum) {
+    const runType = suite ? 'Subtests' : 'Full runs';
+    throw new Error(`${runType} require at least ${minimum} iterations; got ${value}`);
+  }
+  return iterations;
+}
+
 export function runCommand(): Command {
   return new Command('run')
     .description('Run Speedometer3 and output score as JSON')
     .option('--firefox <path>', 'Path to Firefox binary (or BROWSER_BINARY env var)')
     .option('--chrome <path>', 'Path to Chrome binary (or BROWSER_BINARY env var)')
-    .option('--iterations <n>', 'Number of SP3 iterations', '10')
+    .option('--iterations <n>', 'Number of SP3 iterations (minimum: 10 full run, 100 subtest)')
     .option('--suite <name>', 'Run a single SP3 suite (e.g. NewsSite-Nuxt)')
     .option('--samply <output>', 'Record a samply profile and save to this path')
     .option('--verbose', 'Print progress updates to stdout')
@@ -31,9 +41,11 @@ export function runCommand(): Command {
         process.exit(1);
       }
 
-      const iterations = parseInt(opts.iterations, 10);
-      if (isNaN(iterations) || iterations < 1) {
-        console.error(JSON.stringify({ error: `Invalid iterations: ${opts.iterations}` }));
+      let iterations: number;
+      try {
+        iterations = resolveIterations(opts.iterations, opts.suite);
+      } catch (e) {
+        console.error(JSON.stringify({ error: (e as Error).message }));
         process.exit(1);
       }
 
