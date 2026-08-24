@@ -20,6 +20,7 @@ export function runCommand(): Command {
     .option('--iterations <n>', 'Number of SP3 iterations (minimum: 10 full run, 100 subtest)')
     .option('--suite <name>', 'Run a single SP3 suite (e.g. NewsSite-Nuxt)')
     .option('--samply <output>', 'Record a samply profile and save to this path')
+    .option('--disable-chrome-sandbox', 'Launch Chrome with --no-sandbox')
     .option('--verbose', 'Print progress updates to stdout')
     .action(async (opts) => {
       let binary: string;
@@ -59,7 +60,14 @@ export function runCommand(): Command {
         const suiteParam = opts.suite ? `&suites=${encodeURIComponent(opts.suite)}` : '';
         const url = `http://127.0.0.1:${server.port}/?iterationCount=${iterations}&startAutomatically${suiteParam}`;
         if (verbose) process.stdout.write(`[run-speedometer] launching ${browserName}: ${url}\n`);
-        browser = await launchBrowser(browserName, binary, url, opts.samply, verbose);
+        browser = await launchBrowser(
+          browserName,
+          binary,
+          url,
+          opts.samply,
+          verbose,
+          !!opts.disableChromeSandbox,
+        );
 
         const payload = await Promise.race([server.waitForReport(), browser.exited]);
         const score = extractScore(payload);

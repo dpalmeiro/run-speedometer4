@@ -29,4 +29,10 @@ describe('CLI', () => {
     const optionNames = run!.options.map((o) => o.long);
     expect(optionNames).toContain('--iterations');
   });
+
+  it('"run" has an opt-in Chrome sandbox override', () => {
+    const run = program.commands.find((c) => c.name() === 'run');
+    const optionNames = run!.options.map((o) => o.long);
+    expect(optionNames).toContain('--disable-chrome-sandbox');
+  });
 });

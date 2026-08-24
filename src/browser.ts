@@ -94,12 +94,46 @@ function waitForExit(proc: ChildProcess, timeoutMs: number): Promise<void> {
   });
 }
 
+export function chromeBrowserArgs(
+  profileDir: string,
+  url: string,
+  enableJitProfile: boolean,
+  disableSandbox = false,
+): string[] {
+  return [
+    `--user-data-dir=${profileDir}`,
+    '--no-first-run',
+    '--no-default-browser-check',
+    ...(disableSandbox ? ['--no-sandbox'] : []),
+    ...(enableJitProfile ? [
+      '--js-flags=--perf-prof --perf-prof-unwinding-info --interpreted-frames-native-stack',
+    ] : []),
+    url,
+  ];
+}
+
+export function samplyRecordArgs(
+  binaryPath: string,
+  browserArgs: string[],
+  outputPath: string,
+): string[] {
+  return [
+    'record',
+    '--save-only',
+    '--jit-markers',
+    '--presymbolicate',
+    '-o', outputPath,
+    '--', binaryPath, ...browserArgs,
+  ];
+}
+
 export async function launchBrowser(
   browserName: BrowserName,
   binaryPath: string,
   url: string,
   samplyOutput?: string,
   verbose?: boolean,
+  disableChromeSandbox = false,
 ): Promise<BrowserHandle> {
   const profileDir = mkdtempSync(join(tmpdir(), 'run-speedometer-'));
 
@@ -119,29 +153,14 @@ export async function launchBrowser(
     }
   } else {
     const enableJitProfile = !!samplyOutput || process.env.RUN_SPEEDOMETER_JIT_PROFILE === '1';
-    browserArgs = [
-      `--user-data-dir=${profileDir}`,
-      '--no-first-run',
-      '--no-default-browser-check',
-      '--no-sandbox',
-      ...(enableJitProfile ? [
-        '--js-flags=--perf-prof --perf-prof-unwinding-info --interpreted-frames-native-stack',
-      ] : []),
-      url,
-    ];
+    browserArgs = chromeBrowserArgs(profileDir, url, enableJitProfile, disableChromeSandbox);
   }
 
   const wrapWithSamply = !!samplyOutput;
   const command = wrapWithSamply ? 'samply' : binaryPath;
-  const commandArgs = wrapWithSamply ? [
-    'record',
-    '--save-only',
-    '--jit-markers',
-    '--presymbolicate',
-    '--duration', '45',
-    '-o', samplyOutput,
-    '--', binaryPath, ...browserArgs,
-  ] : browserArgs;
+  const commandArgs = wrapWithSamply
+    ? samplyRecordArgs(binaryPath, browserArgs, samplyOutput)
+    : browserArgs;
   const proc = spawn(command, commandArgs, {
     detached: wrapWithSamply,
     stdio: ['ignore', 'ignore', 'pipe'],
