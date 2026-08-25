@@ -3,12 +3,12 @@
   "description": "Speedometer 3 Charts-observable-plot suite",
   "unit": "runs/min",
   "higher_is_better": true,
-  "command": ["run-speedometer", "--iterations", "100", "--suite", "Charts-observable-plot"],
+  "command": ["run-speedometer", "--suite", "Charts-observable-plot"],
   "browsers": ["firefox"],
   "binary": {"type": "arg", "flag": "--firefox"},
   "modes": {
     "profile": {
-      "command": ["run-speedometer", "--iterations", "100", "--suite", "Charts-observable-plot"]
+      "command": ["run-speedometer", "--suite", "Charts-observable-plot"]
     }
   }
 }

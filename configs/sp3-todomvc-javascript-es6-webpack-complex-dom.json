@@ -3,12 +3,12 @@
   "description": "Speedometer 3 TodoMVC-JavaScript-ES6-Webpack-Complex-DOM suite",
   "unit": "runs/min",
   "higher_is_better": true,
-  "command": ["run-speedometer", "--iterations", "100", "--suite", "TodoMVC-JavaScript-ES6-Webpack-Complex-DOM"],
+  "command": ["run-speedometer", "--suite", "TodoMVC-JavaScript-ES6-Webpack-Complex-DOM"],
   "browsers": ["firefox"],
   "binary": {"type": "arg", "flag": "--firefox"},
   "modes": {
     "profile": {
-      "command": ["run-speedometer", "--iterations", "100", "--suite", "TodoMVC-JavaScript-ES6-Webpack-Complex-DOM"]
+      "command": ["run-speedometer", "--suite", "TodoMVC-JavaScript-ES6-Webpack-Complex-DOM"]
     }
   }
 }

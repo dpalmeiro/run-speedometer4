@@ -3,12 +3,12 @@
   "description": "Speedometer 3 TodoMVC-jQuery suite",
   "unit": "runs/min",
   "higher_is_better": true,
-  "command": ["run-speedometer", "--iterations", "100", "--suite", "TodoMVC-jQuery"],
+  "command": ["run-speedometer", "--suite", "TodoMVC-jQuery"],
   "browsers": ["firefox"],
   "binary": {"type": "arg", "flag": "--firefox"},
   "modes": {
     "profile": {
-      "command": ["run-speedometer", "--iterations", "100", "--suite", "TodoMVC-jQuery"]
+      "command": ["run-speedometer", "--suite", "TodoMVC-jQuery"]
     }
   }
 }

@@ -24,10 +24,10 @@ describe('CLI', () => {
     expect(optionNames).toContain('--chrome');
   });
 
-  it('"run" has --iterations option', () => {
+  it('"run" does not expose an iteration override', () => {
     const run = program.commands.find((c) => c.name() === 'run');
     const optionNames = run!.options.map((o) => o.long);
-    expect(optionNames).toContain('--iterations');
+    expect(optionNames).not.toContain('--iterations');
   });
 
   it('"run" has an opt-in Chrome sandbox override', () => {
