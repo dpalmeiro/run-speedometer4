@@ -4,8 +4,9 @@
   "unit": "runs/min",
   "higher_is_better": true,
   "command": ["run-speedometer", "--suite", "Editor-TipTap"],
-  "browsers": ["firefox"],
+  "browsers": ["firefox", "chrome"],
   "binary": {"type": "arg", "flag": "--firefox"},
+  "binary_by_browser": {"chrome": {"type": "arg", "flag": "--chrome"}},
   "modes": {
     "profile": {
       "command": ["run-speedometer", "--suite", "Editor-TipTap"]
