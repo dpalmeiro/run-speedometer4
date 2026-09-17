@@ -1,6 +1,6 @@
-# run-speedometer
+# run-speedometer4
 
-SP3 test runner for lumix. Serves Speedometer3 locally, launches a browser, waits
+Speedometer 4 test runner for lumix. Serves Speedometer locally, launches a browser, waits
 for the benchmark to finish, and prints `{ "score": <number> }` to stdout.
 
 ---
@@ -8,28 +8,28 @@ for the benchmark to finish, and prints `{ "score": <number> }` to stdout.
 ## Architecture
 
 ```
-run-speedometer/
-├── speedometer/           # SP3 source with XHR patch already applied
+run-speedometer4/
+├── speedometer/           # Speedometer 4 source submodule
 ├── src/
 │   ├── cli.ts             # entry point
 │   ├── program.ts         # commander program
 │   ├── server.ts          # HTTP server: static files + /report + /shutdown
 │   ├── browser.ts         # Playwright browser launcher
 │   └── commands/
-│       └── run.ts         # run-speedometer run [options]
+│       └── run.ts         # run-speedometer4 run [options]
 └── package.json
 ```
 
 ## Usage
 
 ```
-run-speedometer run --binary /path/to/firefox --browser firefox --iterations 10
+run-speedometer4 --firefox /path/to/firefox
 ```
 
 Or via env var:
 
 ```
-BROWSER_BINARY=/path/to/firefox run-speedometer run --browser firefox
+BROWSER_BINARY=/path/to/firefox run-speedometer4
 ```
 
 ## Output
@@ -42,10 +42,10 @@ BROWSER_BINARY=/path/to/firefox run-speedometer run --browser firefox
 
 ```json
 {
-  "name": "speedometer3",
+  "name": "speedometer4",
   "unit": "score",
   "higher_is_better": true,
-  "command": ["run-speedometer", "run", "--browser", "firefox", "--iterations", "10"],
+  "command": ["run-speedometer4"],
   "browsers": ["firefox"],
   "binary": { "type": "arg", "flag": "--binary" }
 }

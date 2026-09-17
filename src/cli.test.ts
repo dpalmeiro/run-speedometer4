@@ -2,6 +2,10 @@ import { describe, it, expect } from 'vitest';
 import { program } from './program.js';
 
 describe('CLI', () => {
+  it('uses the Speedometer 4 command name', () => {
+    expect(program.name()).toBe('run-speedometer4');
+  });
+
   it('registers "run" command', () => {
     const names = program.commands.map((c) => c.name());
     expect(names).toContain('run');

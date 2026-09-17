@@ -1,6 +1,6 @@
-# run-speedometer
+# run-speedometer4
 
-Automated Speedometer 3 benchmark runner. Serves the benchmark locally, launches a browser, waits for results, and outputs `{ "score": <number> }` to stdout as JSON.
+Automated Speedometer 4 benchmark runner. Serves the benchmark locally, launches a browser, waits for results, and outputs `{ "score": <number> }` to stdout as JSON.
 
 ## Build & test
 
@@ -14,11 +14,11 @@ npm test            # run tests
 ## Usage
 
 ```bash
-run-speedometer --firefox <path> [--iterations 10] [--suite <name>]
-run-speedometer --chrome <path>  [--iterations 10] [--suite <name>]
+run-speedometer4 --firefox <path> [--suite <name>]
+run-speedometer4 --chrome <path>  [--suite <name>]
 ```
 
-`--suite` filters to a single Speedometer 3 suite (e.g. `NewsSite-Nuxt`, `Perf-Dashboard`). Without it, all suites run.
+`--suite` filters to a single Speedometer 4 suite (e.g. `NewsSite-Nuxt`, `Perf-Dashboard`). Without it, all default suites run.
 
 On macOS, pass `.app` bundles — the browser launcher handles them directly via `spawn`.
 
@@ -27,8 +27,8 @@ On macOS, pass `.app` bundles — the browser launcher handles them directly via
 - `src/server.ts` — HTTP server that serves `speedometer/` and receives results via `POST /report`
 - `src/browser.ts` — launches Firefox or Chrome with a clean temp profile
 - `src/commands/run.ts` — CLI action: starts server, launches browser, races report vs browser exit
-- `speedometer/` — Speedometer 3 submodule (WebKit/Speedometer, branch release/3.1)
-- `configs/` — lumix test case JSON files for each SP3 suite
+- `speedometer/` — Speedometer 4 submodule (WebKit/Speedometer, pinned commit recorded by this repo)
+- `configs/` — one lumix test case JSON file for each standard and experimental Speedometer 4 suite, plus the full default benchmark
 
 ## How it works
 
@@ -42,5 +42,7 @@ On macOS, pass `.app` bundles — the browser launcher handles them directly via
 `configs/` contains lumix test case definitions. Reference them with:
 
 ```bash
-lumix benchmark ~/src/run-speedometer/configs/sp3-full.json --firefox /path/to/firefox
+lumix benchmark ~/src/run-speedometer4/configs/sp4-full.json --firefox /path/to/firefox
 ```
+
+Experimental suite configs select their suite explicitly and are not part of `sp4-full.json`.

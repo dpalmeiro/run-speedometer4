@@ -13,8 +13,8 @@ const MIME: Record<string, string> = {
   '.svg':  'image/svg+xml',
 };
 
-const SP3_DIR = join(fileURLToPath(import.meta.url), '../../speedometer');
-const CLIENT_PATH = '/run-speedometer-client.mjs';
+const SP4_DIR = join(fileURLToPath(import.meta.url), '../../speedometer');
+const CLIENT_PATH = '/run-speedometer4-client.mjs';
 const CLIENT_SCRIPT = `
 const client = globalThis.benchmarkClient;
 if (!client) throw new Error('Speedometer benchmark client was not initialized');
@@ -35,14 +35,14 @@ client.didFinishLastIteration = async (metrics, ...args) => {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      'Speedometer-3': { metrics: { Score: { current: [scores] } } },
+      'Speedometer-4': { metrics: { Score: { current: [scores] } } },
     }),
   });
 };
 `;
 
 export interface ReportPayload {
-  'Speedometer-3': {
+  'Speedometer-4': {
     metrics: {
       Score: { current: number[][] };
     };
@@ -85,7 +85,7 @@ export function startServer(opts: { verbose?: boolean } = {}): Promise<ServerHan
       }
 
       if (req.method === 'POST' && url === '/started') {
-        if (verbose) process.stdout.write(`[run-speedometer] benchmark started\n`);
+        if (verbose) process.stdout.write(`[run-speedometer4] benchmark started\n`);
         res.writeHead(200);
         res.end('{}');
         return;
@@ -100,7 +100,7 @@ export function startServer(opts: { verbose?: boolean } = {}): Promise<ServerHan
             clearTimeout(timeout);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end('{}');
-            if (verbose) process.stdout.write(`[run-speedometer] report received\n`);
+            if (verbose) process.stdout.write(`[run-speedometer4] report received\n`);
             reportResolve!(payload);
           } catch (e) {
             clearTimeout(timeout);
@@ -121,7 +121,7 @@ export function startServer(opts: { verbose?: boolean } = {}): Promise<ServerHan
 
       const pathname = url.split('?')[0];
       const filePath = pathname === '/' ? '/index.html' : pathname;
-      const fullPath = join(SP3_DIR, filePath);
+      const fullPath = join(SP4_DIR, filePath);
 
       let resolvedPath = fullPath;
       if (existsSync(fullPath) && statSync(fullPath).isDirectory()) {
@@ -135,7 +135,7 @@ export function startServer(opts: { verbose?: boolean } = {}): Promise<ServerHan
 
       const mime = MIME[extname(resolvedPath)] ?? 'application/octet-stream';
       res.writeHead(200, { 'Content-Type': mime });
-      if (resolvedPath === join(SP3_DIR, 'index.html')) {
+      if (resolvedPath === join(SP4_DIR, 'index.html')) {
         const html = readFileSync(resolvedPath, 'utf8').replace(
           '</head>',
           `        <script src="${CLIENT_PATH}" type="module"></script>\n    </head>`,
@@ -163,7 +163,7 @@ export function startServer(opts: { verbose?: boolean } = {}): Promise<ServerHan
 }
 
 export function extractScore(payload: ReportPayload): number {
-  const scores = payload['Speedometer-3'].metrics.Score.current[0];
+  const scores = payload['Speedometer-4'].metrics.Score.current[0];
   if (!scores || scores.length === 0) throw new Error('No scores in report payload');
   const mean = scores.reduce((a, b) => a + b, 0) / scores.length;
   return Math.round(mean * 100) / 100;

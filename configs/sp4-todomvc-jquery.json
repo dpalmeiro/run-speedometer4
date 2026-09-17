@@ -1,15 +1,15 @@
 {
-  "name": "speedometer3-charts-chartjs",
-  "description": "Speedometer 3 Charts-chartjs suite",
+  "name": "speedometer4-todomvc-jquery",
+  "description": "Speedometer 4 TodoMVC-jQuery suite",
   "unit": "runs/min",
   "higher_is_better": true,
-  "command": ["run-speedometer", "--suite", "Charts-chartjs"],
+  "command": ["run-speedometer4", "--suite", "TodoMVC-jQuery"],
   "browsers": ["firefox", "chrome"],
   "binary": {"type": "arg", "flag": "--firefox"},
   "binary_by_browser": {"chrome": {"type": "arg", "flag": "--chrome"}},
   "modes": {
     "profile": {
-      "command": ["run-speedometer", "--suite", "Charts-chartjs"]
+      "command": ["run-speedometer4", "--suite", "TodoMVC-jQuery"]
     }
   }
 }

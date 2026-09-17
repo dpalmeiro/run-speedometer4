@@ -1,9 +1,9 @@
 {
-  "name": "run-speedometer",
+  "name": "run-speedometer4",
   "version": "0.1.0",
   "type": "module",
   "bin": {
-    "run-speedometer": "./dist/cli.js"
+    "run-speedometer4": "./dist/cli.js"
   },
   "scripts": {
     "setup": "git submodule update --init && npm install && npm run build && npm link",

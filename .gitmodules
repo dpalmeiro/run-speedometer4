@@ -1,4 +1,4 @@
 [submodule "speedometer"]
 	path = speedometer
 	url = https://github.com/WebKit/Speedometer.git
-	branch = release/3.1
+	branch = main

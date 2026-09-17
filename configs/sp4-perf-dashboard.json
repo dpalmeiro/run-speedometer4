@@ -1,15 +1,15 @@
 {
-  "name": "speedometer3",
-  "description": "Speedometer 3 full benchmark (all default suites)",
+  "name": "speedometer4-perf-dashboard",
+  "description": "Speedometer 4 Perf-Dashboard suite",
   "unit": "runs/min",
   "higher_is_better": true,
-  "command": ["run-speedometer"],
+  "command": ["run-speedometer4", "--suite", "Perf-Dashboard"],
   "browsers": ["firefox", "chrome"],
   "binary": {"type": "arg", "flag": "--firefox"},
   "binary_by_browser": {"chrome": {"type": "arg", "flag": "--chrome"}},
   "modes": {
     "profile": {
-      "command": ["run-speedometer"]
+      "command": ["run-speedometer4", "--suite", "Perf-Dashboard"]
     }
   }
 }

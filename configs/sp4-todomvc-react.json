@@ -1,15 +1,15 @@
 {
-  "name": "speedometer3-todomvc-vue",
-  "description": "Speedometer 3 TodoMVC-Vue suite",
+  "name": "speedometer4-todomvc-react",
+  "description": "Speedometer 4 TodoMVC-React suite",
   "unit": "runs/min",
   "higher_is_better": true,
-  "command": ["run-speedometer", "--suite", "TodoMVC-Vue"],
+  "command": ["run-speedometer4", "--suite", "TodoMVC-React"],
   "browsers": ["firefox", "chrome"],
   "binary": {"type": "arg", "flag": "--firefox"},
   "binary_by_browser": {"chrome": {"type": "arg", "flag": "--chrome"}},
   "modes": {
     "profile": {
-      "command": ["run-speedometer", "--suite", "TodoMVC-Vue"]
+      "command": ["run-speedometer4", "--suite", "TodoMVC-React"]
     }
   }
 }

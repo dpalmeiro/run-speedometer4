@@ -135,7 +135,7 @@ export async function launchBrowser(
   verbose?: boolean,
   disableChromeSandbox = false,
 ): Promise<BrowserHandle> {
-  const profileDir = mkdtempSync(join(tmpdir(), 'run-speedometer-'));
+  const profileDir = mkdtempSync(join(tmpdir(), 'run-speedometer4-'));
 
   let browserArgs: string[];
   let browserEnv = process.env;

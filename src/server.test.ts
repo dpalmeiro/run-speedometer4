@@ -3,7 +3,7 @@ import { extractScore, startServer, type ReportPayload } from './server.js';
 
 function makePayload(scores: number[]): ReportPayload {
   return {
-    'Speedometer-3': {
+    'Speedometer-4': {
       metrics: {
         Score: { current: [scores] },
       },
@@ -44,7 +44,7 @@ describe('startServer — /report and /shutdown', () => {
     const result = await server.waitForReport();
     await postDone;
 
-    expect(result['Speedometer-3'].metrics.Score.current[0]).toEqual([50, 60]);
+    expect(result['Speedometer-4'].metrics.Score.current[0]).toEqual([50, 60]);
     server.close();
   });
 
@@ -54,13 +54,13 @@ describe('startServer — /report and /shutdown', () => {
     expect(res.status).toBe(200);
     const text = await res.text();
     expect(text).toContain('<!DOCTYPE html>');
-    expect(text).toContain('<script src="/run-speedometer-client.mjs" type="module"></script>');
+    expect(text).toContain('<script src="/run-speedometer4-client.mjs" type="module"></script>');
     server.close();
   });
 
   it('serves the benchmark reporting integration', async () => {
     const server = await startServer();
-    const res = await fetch(`http://127.0.0.1:${server.port}/run-speedometer-client.mjs`);
+    const res = await fetch(`http://127.0.0.1:${server.port}/run-speedometer4-client.mjs`);
 
     expect(res.status).toBe(200);
     expect(res.headers.get('content-type')).toBe('application/javascript');
