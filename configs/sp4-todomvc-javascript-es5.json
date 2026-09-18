@@ -1,5 +1,6 @@
 {
   "name": "speedometer4-todomvc-javascript-es5",
+  "ci_test_suite": "speedometer3",
   "description": "Speedometer 4 TodoMVC-JavaScript-ES5 suite",
   "unit": "runs/min",
   "higher_is_better": true,

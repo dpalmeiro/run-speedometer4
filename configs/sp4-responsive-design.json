@@ -1,5 +1,6 @@
 {
   "name": "speedometer4-responsive-design",
+  "ci_test_suite": "speedometer3",
   "description": "Speedometer 4 experimental Responsive-Design suite",
   "unit": "runs/min",
   "higher_is_better": true,

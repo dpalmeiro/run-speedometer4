@@ -1,5 +1,6 @@
 {
   "name": "speedometer4-todomvc-jaspr-dart2wasm-o2",
+  "ci_test_suite": "speedometer3",
   "description": "Speedometer 4 experimental TodoMVC-Jaspr-Dart2Wasm-O2 suite",
   "unit": "runs/min",
   "higher_is_better": true,

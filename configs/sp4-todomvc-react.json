@@ -1,5 +1,6 @@
 {
   "name": "speedometer4-todomvc-react",
+  "ci_test_suite": "speedometer3",
   "description": "Speedometer 4 TodoMVC-React suite",
   "unit": "runs/min",
   "higher_is_better": true,

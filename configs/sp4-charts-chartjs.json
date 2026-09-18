@@ -1,5 +1,6 @@
 {
   "name": "speedometer4-charts-chartjs",
+  "ci_test_suite": "speedometer3",
   "description": "Speedometer 4 Charts-chartjs suite",
   "unit": "runs/min",
   "higher_is_better": true,

@@ -1,5 +1,6 @@
 {
   "name": "speedometer4-todomvc-webcomponents-postmessage",
+  "ci_test_suite": "speedometer3",
   "description": "Speedometer 4 experimental TodoMVC-WebComponents-PostMessage suite",
   "unit": "runs/min",
   "higher_is_better": true,
