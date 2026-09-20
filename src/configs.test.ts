@@ -12,6 +12,13 @@ function suiteNamesFrom(relativePath: string): string[] {
 }
 
 describe('Speedometer 4 configs', () => {
+  it('runs the experimental workloads in the full config', () => {
+    const config = JSON.parse(readFileSync(join(configsDir, 'sp4-full.json'), 'utf8'));
+    expect(config.ci_test_suite).toBe('speedometer-experimental');
+    expect(config.command).toEqual(['run-speedometer4', '--tags', 'experimental']);
+    expect(config.modes.profile.command).toEqual(['run-speedometer4', '--tags', 'experimental']);
+  });
+
   it('has one config for every selectable suite', () => {
     const suiteNames = [
       ...suiteNamesFrom('speedometer/suites/default-suites.mjs'),
@@ -24,5 +31,21 @@ describe('Speedometer 4 configs', () => {
       .sort();
 
     expect(configuredSuiteNames).toEqual(suiteNames);
+  });
+
+  it('selects the matching Firefox CI test for each suite', () => {
+    const experimentalSuiteNames = new Set(
+      suiteNamesFrom('speedometer/suites-experimental/suites.mjs'),
+    );
+
+    for (const file of readdirSync(configsDir)) {
+      if (!file.startsWith('sp4-') || !file.endsWith('.json') || file === 'sp4-full.json') continue;
+      const config = JSON.parse(readFileSync(join(configsDir, file), 'utf8'));
+      const suiteName = config.command[2] as string;
+      const expectedCiTest = experimentalSuiteNames.has(suiteName)
+        ? 'speedometer-experimental'
+        : 'speedometer3';
+      expect(config.ci_test_suite, file).toBe(expectedCiTest);
+    }
   });
 });

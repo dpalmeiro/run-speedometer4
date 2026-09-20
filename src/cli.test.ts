@@ -28,6 +28,12 @@ describe('CLI', () => {
     expect(optionNames).toContain('--chrome');
   });
 
+  it('"run" has --tags option', () => {
+    const run = program.commands.find((c) => c.name() === 'run');
+    const optionNames = run!.options.map((o) => o.long);
+    expect(optionNames).toContain('--tags');
+  });
+
   it('"run" does not expose an iteration override', () => {
     const run = program.commands.find((c) => c.name() === 'run');
     const optionNames = run!.options.map((o) => o.long);

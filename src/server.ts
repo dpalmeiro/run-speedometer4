@@ -11,6 +11,7 @@ const MIME: Record<string, string> = {
   '.png':  'image/png',
   '.json': 'application/json',
   '.svg':  'image/svg+xml',
+  '.wasm': 'application/wasm',
 };
 
 const SP4_DIR = join(fileURLToPath(import.meta.url), '../../speedometer');

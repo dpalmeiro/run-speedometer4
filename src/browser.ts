@@ -22,6 +22,12 @@ const FIREFOX_PREFS: Record<string, boolean | number | string> = {
   'startup.homepage_welcome_url.additional': '',
   'trailhead.firstrun.branches': 'join',
   'layout.frame_rate': 60,
+  // Match the Firefox CI configuration for speedometer-experimental. The
+  // Media-Streaming workload starts muted playback from a synthetic click.
+  'media.autoplay.default': 0,
+  'media.autoplay.blocking_policy': 0,
+  'media.allowed-to-play.enabled': true,
+  'media.block-autoplay-until-in-foreground': false,
 };
 
 function writeFirefoxUserJs(profileDir: string): void {

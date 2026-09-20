@@ -1,16 +1,16 @@
 {
-  "name": "speedometer4-todomvc-jaspr-dart2wasm-o2",
+  "name": "speedometer4-media-streaming",
   "ci_test_suite": "speedometer-experimental",
-  "description": "Speedometer 4 experimental TodoMVC-Jaspr-Dart2Wasm-O2 suite",
+  "description": "Speedometer 4 experimental Media-Streaming suite",
   "unit": "runs/min",
   "higher_is_better": true,
-  "command": ["run-speedometer4", "--suite", "TodoMVC-Jaspr-Dart2Wasm-O2"],
+  "command": ["run-speedometer4", "--suite", "Media-Streaming"],
   "browsers": ["firefox", "chrome"],
   "binary": {"type": "arg", "flag": "--firefox"},
   "binary_by_browser": {"chrome": {"type": "arg", "flag": "--chrome"}},
   "modes": {
     "profile": {
-      "command": ["run-speedometer4", "--suite", "TodoMVC-Jaspr-Dart2Wasm-O2"]
+      "command": ["run-speedometer4", "--suite", "Media-Streaming"]
     }
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "speedometer4-newssite-postmessage",
-  "ci_test_suite": "speedometer3",
+  "ci_test_suite": "speedometer-experimental",
   "description": "Speedometer 4 experimental NewsSite-PostMessage suite",
   "unit": "runs/min",
   "higher_is_better": true,

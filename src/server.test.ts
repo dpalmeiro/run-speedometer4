@@ -77,6 +77,16 @@ describe('startServer — /report and /shutdown', () => {
     server.close();
   });
 
+  it('serves WebAssembly with the MIME type required by compileStreaming', async () => {
+    const server = await startServer();
+    const path = '/suites-experimental/todomvc-dart-jaspr/dist/out-dart2wasm-O2/main.wasm';
+    const res = await fetch(`http://127.0.0.1:${server.port}${path}`);
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toBe('application/wasm');
+    server.close();
+  });
+
   it('returns 404 for unknown paths', async () => {
     const server = await startServer();
     const res = await fetch(`http://127.0.0.1:${server.port}/does-not-exist.xyz`);
