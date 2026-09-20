@@ -6,25 +6,12 @@ export function iterationsForSuite(suite?: string): number {
   return suite ? 100 : 10;
 }
 
-export function selectionParam(suite?: string, tags?: string): string {
-  const selectedSuite = suite?.trim();
-  const selectedTags = tags?.split(',').map((tag) => tag.trim()).filter(Boolean);
-  if (selectedSuite && selectedTags?.length) {
-    throw new Error('--suite and --tags cannot be used together');
-  }
-  if (selectedSuite) return `&suites=${encodeURIComponent(selectedSuite)}`;
-
-  const effectiveTags = selectedTags?.length ? selectedTags : ['experimental'];
-  return `&tags=${effectiveTags.map(encodeURIComponent).join(',')}`;
-}
-
 export function runCommand(): Command {
   return new Command('run')
     .description('Run Speedometer 4 and output score as JSON')
     .option('--firefox <path>', 'Path to Firefox binary (or BROWSER_BINARY env var)')
     .option('--chrome <path>', 'Path to Chrome binary (or BROWSER_BINARY env var)')
     .option('--suite <name>', 'Run a single Speedometer 4 suite (e.g. NewsSite-Nuxt)')
-    .option('--tags <tags>', 'Comma-separated Speedometer 4 suite tags (defaults to experimental)')
     .option('--samply <output>', 'Record a samply profile and save to this path')
     .option('--disable-chrome-sandbox', 'Launch Chrome with --no-sandbox')
     .option('--verbose', 'Print progress updates to stdout')
@@ -57,8 +44,8 @@ export function runCommand(): Command {
       let exitCode = 0;
       try {
         server = await startServer({ verbose });
-        const selection = selectionParam(opts.suite, opts.tags);
-        const url = `http://127.0.0.1:${server.port}/?iterationCount=${iterations}&startAutomatically${selection}`;
+        const suiteParam = opts.suite ? `&suites=${encodeURIComponent(opts.suite)}` : '';
+        const url = `http://127.0.0.1:${server.port}/?iterationCount=${iterations}&startAutomatically${suiteParam}`;
         if (verbose) process.stdout.write(`[run-speedometer4] launching ${browserName}: ${url}\n`);
         browser = await launchBrowser(
           browserName,

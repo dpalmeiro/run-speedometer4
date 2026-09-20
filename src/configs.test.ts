@@ -12,12 +12,6 @@ function suiteNamesFrom(relativePath: string): string[] {
 }
 
 describe('Speedometer 4 configs', () => {
-  it('runs the experimental workloads in the full config', () => {
-    const config = JSON.parse(readFileSync(join(configsDir, 'sp4-full.json'), 'utf8'));
-    expect(config.command).toEqual(['run-speedometer4', '--tags', 'experimental']);
-    expect(config.modes.profile.command).toEqual(['run-speedometer4', '--tags', 'experimental']);
-  });
-
   it('has one config for every selectable suite', () => {
     const suiteNames = [
       ...suiteNamesFrom('speedometer/suites/default-suites.mjs'),

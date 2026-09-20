@@ -9,15 +9,15 @@ You are a run-speedometer4 expert. run-speedometer4 serves the Speedometer 4 ben
 ## Usage
 
 ```bash
-run-speedometer4 --firefox <path> [--suite <name> | --tags <tags>]
-run-speedometer4 --chrome <path>  [--suite <name> | --tags <tags>]
+run-speedometer4 --firefox <path> [--suite <name>]
+run-speedometer4 --chrome <path>  [--suite <name>]
 ```
 
-`--suite` runs a single Speedometer 4 suite. `--tags` accepts comma-separated suite tags. Without either option, all experimental workloads run. Use `--tags default,experimental` to include both groups.
+`--suite` runs a single Speedometer 4 suite. Without it, all default suites run.
 
 ## Suite names
 
-Use the suite name recorded in the corresponding `configs/sp4-*.json` file. The configs cover every standard and experimental suite exposed by the pinned Speedometer revision. Experimental suites are selectable individually, and `sp4-full.json` runs the complete experimental group.
+Use the suite name recorded in the corresponding `configs/sp4-*.json` file. The configs cover every standard and experimental suite exposed by the pinned Speedometer revision. Experimental suites are selectable individually but are not included in the full default run.
 
 ## Config files for lumix
 
@@ -29,7 +29,7 @@ lumix benchmark ~/src/run-speedometer4/configs/sp4-full.json --firefox <path>
 ## How it works
 
 1. Binds an HTTP server to a random localhost port
-2. Launches the browser with either `tags=experimental` (the default), another explicit tag list, or `suites=<name>`
+2. Launches the browser at `http://127.0.0.1:<port>/?iterationCount=N&startAutomatically&suites=<name>`
 3. An injected integration module hooks the benchmark client and POSTs results to `/report` when done
 4. Score is the mean of all iteration scores, rounded to 2 decimal places
 
