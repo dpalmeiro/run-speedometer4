@@ -14,7 +14,7 @@ export function selectionParam(suite?: string, tags?: string): string {
   }
   if (selectedSuite) return `&suites=${encodeURIComponent(selectedSuite)}`;
 
-  const effectiveTags = selectedTags?.length ? selectedTags : ['experimental'];
+  const effectiveTags = selectedTags?.length ? selectedTags : ['sp4'];
   return `&tags=${effectiveTags.map(encodeURIComponent).join(',')}`;
 }
 
@@ -24,7 +24,7 @@ export function runCommand(): Command {
     .option('--firefox <path>', 'Path to Firefox binary (or BROWSER_BINARY env var)')
     .option('--chrome <path>', 'Path to Chrome binary (or BROWSER_BINARY env var)')
     .option('--suite <name>', 'Run a single Speedometer 4 suite (e.g. NewsSite-Nuxt)')
-    .option('--tags <tags>', 'Comma-separated Speedometer 4 suite tags (defaults to experimental)')
+    .option('--tags <tags>', 'Comma-separated Speedometer 4 suite tags (defaults to sp4)')
     .option('--samply <output>', 'Record a samply profile and save to this path')
     .option('--disable-chrome-sandbox', 'Launch Chrome with --no-sandbox')
     .option('--verbose', 'Print progress updates to stdout')

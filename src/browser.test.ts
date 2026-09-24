@@ -1,5 +1,21 @@
 import { describe, expect, it } from 'vitest';
-import { chromeBrowserArgs, samplyRecordArgs } from './browser.js';
+import { chromeBrowserArgs, resolveBrowserBinary, samplyRecordArgs } from './browser.js';
+
+describe('resolveBrowserBinary', () => {
+  it('resolves a Firefox macOS application bundle', () => {
+    expect(resolveBrowserBinary('firefox', '/Applications/Firefox.app', 'darwin'))
+      .toBe('/Applications/Firefox.app/Contents/MacOS/firefox');
+  });
+
+  it('resolves a Chrome macOS application bundle', () => {
+    expect(resolveBrowserBinary('chrome', '/Applications/Google Chrome.app/', 'darwin'))
+      .toBe('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome');
+  });
+
+  it('leaves executable paths unchanged', () => {
+    expect(resolveBrowserBinary('firefox', '/usr/bin/firefox', 'linux')).toBe('/usr/bin/firefox');
+  });
+});
 
 describe('chromeBrowserArgs', () => {
   it('keeps the Chrome sandbox enabled by default', () => {

@@ -1,13 +1,25 @@
 import { spawn, spawnSync, ChildProcess } from 'child_process';
 import { mkdtempSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
-import { dirname, join } from 'path';
+import { basename, dirname, join } from 'path';
 
 export type BrowserName = 'firefox' | 'chrome';
 
 export interface BrowserHandle {
   close(): Promise<void>;
   exited: Promise<never>;
+}
+
+export function resolveBrowserBinary(
+  browserName: BrowserName,
+  binaryPath: string,
+  platform: NodeJS.Platform = process.platform,
+): string {
+  const appPath = binaryPath.replace(/\/+$/, '');
+  if (platform !== 'darwin' || !appPath.endsWith('.app')) return binaryPath;
+
+  const executable = browserName === 'firefox' ? 'firefox' : basename(appPath, '.app');
+  return join(appPath, 'Contents', 'MacOS', executable);
 }
 
 // Minimal prefs to suppress first-run UI and dialogs without altering benchmark behaviour.
@@ -141,6 +153,7 @@ export async function launchBrowser(
   verbose?: boolean,
   disableChromeSandbox = false,
 ): Promise<BrowserHandle> {
+  const executablePath = resolveBrowserBinary(browserName, binaryPath);
   const profileDir = mkdtempSync(join(tmpdir(), 'run-speedometer4-'));
 
   let browserArgs: string[];
@@ -163,9 +176,9 @@ export async function launchBrowser(
   }
 
   const wrapWithSamply = !!samplyOutput;
-  const command = wrapWithSamply ? 'samply' : binaryPath;
+  const command = wrapWithSamply ? 'samply' : executablePath;
   const commandArgs = wrapWithSamply
-    ? samplyRecordArgs(binaryPath, browserArgs, samplyOutput)
+    ? samplyRecordArgs(executablePath, browserArgs, samplyOutput)
     : browserArgs;
   const proc = spawn(command, commandArgs, {
     detached: wrapWithSamply,

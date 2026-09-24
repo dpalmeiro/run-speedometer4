@@ -18,7 +18,7 @@ run-speedometer4 --firefox <path> [--suite <name> | --tags <tags>]
 run-speedometer4 --chrome <path>  [--suite <name> | --tags <tags>]
 ```
 
-`--suite` filters to a single Speedometer 4 suite (e.g. `NewsSite-Nuxt`). `--tags` accepts a comma-separated tag list. Without either option, the experimental workloads run; use `--tags default,experimental` to run both the official defaults and experimental workloads.
+`--suite` filters to a single Speedometer 4 suite (e.g. `ChatRoom-React`). `--tags` accepts a comma-separated tag list. Without either option, the workloads tagged `sp4` run.
 
 On macOS, pass `.app` bundles — the browser launcher handles them directly via `spawn`.
 
@@ -27,13 +27,13 @@ On macOS, pass `.app` bundles — the browser launcher handles them directly via
 - `src/server.ts` — HTTP server that serves `speedometer/` and receives results via `POST /report`
 - `src/browser.ts` — launches Firefox or Chrome with a clean temp profile
 - `src/commands/run.ts` — CLI action: starts server, launches browser, races report vs browser exit
-- `speedometer/` — Speedometer 4 submodule (WebKit/Speedometer, pinned commit recorded by this repo)
-- `configs/` — one lumix test case JSON file for each standard and experimental Speedometer 4 suite, plus the experimental workload group
+- `speedometer/` — Speedometer 4 submodule (Mozilla's `sp4-exp` branch, pinned commit recorded by this repo)
+- `configs/` — one lumix test case JSON file for each of the seven `sp4`-tagged suites, plus the complete `sp4` workload group
 
 ## How it works
 
 1. Binds an HTTP server to a random localhost port
-2. Launches the browser pointing at `http://127.0.0.1:<port>/?iterationCount=N&startAutomatically&tags=experimental` by default
+2. Launches the browser pointing at `http://127.0.0.1:<port>/?iterationCount=N&startAutomatically&tags=sp4` by default
 3. The server injects a small integration module that hooks `didFinishLastIteration()` and POSTs results to `/report`
 4. Server extracts the mean score and the CLI prints `{ "score": <number> }`
 
@@ -45,4 +45,4 @@ On macOS, pass `.app` bundles — the browser launcher handles them directly via
 lumix benchmark ~/src/run-speedometer4/configs/sp4-full.json --firefox /path/to/firefox
 ```
 
-`sp4-full.json` runs all experimental workloads. Individual suite configs select their suite explicitly.
+`sp4-full.json` runs all workloads tagged `sp4`. Individual suite configs select their suite explicitly.

@@ -12,8 +12,8 @@ describe('iterationsForSuite', () => {
 });
 
 describe('selectionParam', () => {
-  it('selects experimental workloads by default', () => {
-    expect(selectionParam()).toBe('&tags=experimental');
+  it('selects Speedometer 4 workloads by default', () => {
+    expect(selectionParam()).toBe('&tags=sp4');
   });
 
   it('selects an individual suite without a tags parameter', () => {
