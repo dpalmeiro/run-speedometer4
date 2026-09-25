@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { chromeBrowserArgs, resolveBrowserBinary, samplyRecordArgs } from './browser.js';
+import { browserSpawnInvocation, chromeBrowserArgs, firefoxBrowserArgs, resolveBrowserBinary, samplyRecordArgs, windowsCloseBrowserScript } from './browser.js';
 
 describe('resolveBrowserBinary', () => {
   it('resolves a Firefox macOS application bundle', () => {
@@ -31,6 +31,18 @@ describe('chromeBrowserArgs', () => {
   });
 });
 
+describe('firefoxBrowserArgs', () => {
+  it('waits for the handed-off browser process on Windows', () => {
+    expect(firefoxBrowserArgs('C:\\Temp\\profile', 'http://localhost/', 'win32'))
+      .toEqual(['-wait-for-browser', '-no-remote', '-profile', 'C:\\Temp\\profile', 'http://localhost/']);
+  });
+
+  it('does not add the Windows launcher flag on other platforms', () => {
+    expect(firefoxBrowserArgs('/tmp/profile', 'http://localhost/', 'linux'))
+      .toEqual(['-no-remote', '-profile', '/tmp/profile', 'http://localhost/']);
+  });
+});
+
 describe('samplyRecordArgs', () => {
   it('presymbolicates and records until the browser is closed', () => {
     const args = samplyRecordArgs('/path/to/firefox', ['--profile', '/tmp/profile'], '/tmp/profile.json.gz');
@@ -40,5 +52,36 @@ describe('samplyRecordArgs', () => {
     expect(args).toEqual(expect.arrayContaining([
       '-o', '/tmp/profile.json.gz', '--', '/path/to/firefox', '--profile', '/tmp/profile',
     ]));
+  });
+});
+
+describe('browserSpawnInvocation', () => {
+  it('runs Windows command wrappers through cmd.exe', () => {
+    const invocation = browserSpawnInvocation(
+      'C:\\Temp\\wrapper.cmd',
+      ['-profile', 'C:\\Temp\\profile', 'http://127.0.0.1/?a=1&b=2'],
+      'win32',
+    );
+    expect(invocation.command).toBe(process.env.ComSpec || 'cmd.exe');
+    expect(invocation.args.slice(0, 3)).toEqual(['/d', '/s', '/c']);
+    expect(invocation.args[3]).toContain('wrapper.cmd');
+    expect(invocation.args[3]).toContain('^&');
+    expect(invocation.windowsVerbatimArguments).toBe(true);
+  });
+
+  it('spawns native executables directly', () => {
+    expect(browserSpawnInvocation('/usr/bin/firefox', ['-profile', '/tmp/profile'], 'linux'))
+      .toEqual({ command: '/usr/bin/firefox', args: ['-profile', '/tmp/profile'] });
+  });
+});
+
+describe('windowsCloseBrowserScript', () => {
+  it('closes visible matching browser windows in the current session', () => {
+    const script = windowsCloseBrowserScript('firefox.exe');
+    expect(script).toContain('$targetProcessName = "firefox.exe"');
+    expect(script).toContain('$_.SessionId -eq $sessionId');
+    expect(script).toContain('$target.CloseMainWindow()');
+    expect(script).not.toContain('Get-CimInstance');
+    expect(script).not.toContain('Stop-Process');
   });
 });

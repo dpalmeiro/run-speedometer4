@@ -1,7 +1,7 @@
 import { spawn, spawnSync, ChildProcess } from 'child_process';
 import { mkdtempSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
-import { basename, dirname, join } from 'path';
+import { dirname, join, posix } from 'path';
 
 export type BrowserName = 'firefox' | 'chrome';
 
@@ -18,8 +18,8 @@ export function resolveBrowserBinary(
   const appPath = binaryPath.replace(/\/+$/, '');
   if (platform !== 'darwin' || !appPath.endsWith('.app')) return binaryPath;
 
-  const executable = browserName === 'firefox' ? 'firefox' : basename(appPath, '.app');
-  return join(appPath, 'Contents', 'MacOS', executable);
+  const executable = browserName === 'firefox' ? 'firefox' : posix.basename(appPath, '.app');
+  return posix.join(appPath, 'Contents', 'MacOS', executable);
 }
 
 // Minimal prefs to suppress first-run UI and dialogs without altering benchmark behaviour.
@@ -48,6 +48,19 @@ function writeFirefoxUserJs(profileDir: string): void {
     return `user_pref(${JSON.stringify(key)}, ${jsVal});`;
   });
   writeFileSync(join(profileDir, 'user.js'), lines.join('\n') + '\n');
+}
+
+export function firefoxBrowserArgs(
+  profileDir: string,
+  url: string,
+  platform: NodeJS.Platform = process.platform,
+): string[] {
+  return [
+    ...(platform === 'win32' ? ['-wait-for-browser'] : []),
+    '-no-remote',
+    '-profile', profileDir,
+    url,
+  ];
 }
 
 async function activateOnMac(pid: number): Promise<void> {
@@ -145,6 +158,67 @@ export function samplyRecordArgs(
   ];
 }
 
+export function browserSpawnInvocation(
+  command: string,
+  args: string[],
+  platform: NodeJS.Platform = process.platform,
+): { command: string; args: string[]; windowsVerbatimArguments?: boolean } {
+  if (platform === 'win32' && /\.(?:cmd|bat)$/i.test(command)) {
+    // libuv cannot execute batch files directly on current Node releases. Use
+    // cmd.exe with explicit escaping so benchmark URLs containing &, %, and
+    // other shell metacharacters remain a single literal argument.
+    const metaChars = /([()\][%!^"`<>&|;, *?])/g;
+    const escapeCommand = (value: string) => value.replace(metaChars, '^$1');
+    const escapeArgument = (value: string) => {
+      let escaped = value.replace(/(?=(\\+?)?)\1"/g, '$1$1\\"');
+      escaped = escaped.replace(/(?=(\\+?)?)\1$/, '$1$1');
+      escaped = `"${escaped}"`;
+      return escaped.replace(metaChars, '^$1');
+    };
+    const shellCommand = [escapeCommand(command), ...args.map(escapeArgument)].join(' ');
+    return {
+      command: process.env.ComSpec || 'cmd.exe',
+      args: ['/d', '/s', '/c', `"${shellCommand}"`],
+      windowsVerbatimArguments: true,
+    };
+  }
+  return { command, args };
+}
+
+export function windowsCloseBrowserScript(processName: string): string {
+  return `$ErrorActionPreference = 'Stop'
+$targetProcessName = ${JSON.stringify(processName)}
+$sessionId = (Get-Process -Id $PID).SessionId
+$targetBaseName = [IO.Path]::GetFileNameWithoutExtension($targetProcessName)
+$targets = @(Get-Process -Name $targetBaseName -ErrorAction SilentlyContinue | Where-Object {
+  $_.SessionId -eq $sessionId -and $_.MainWindowHandle -ne 0
+})
+$closedWindow = $false
+foreach ($target in $targets) {
+  if ($target.CloseMainWindow()) {
+    $closedWindow = $true
+  }
+}
+if (-not $closedWindow) { exit 4 }
+`;
+}
+
+function closeWrappedBrowserOnWindows(browserName: BrowserName, verbose?: boolean): void {
+  const processName = browserName === 'firefox' ? 'firefox.exe' : 'chrome.exe';
+  const result = spawnSync('powershell.exe', [
+    '-NoLogo',
+    '-NoProfile',
+    '-NonInteractive',
+    '-ExecutionPolicy', 'Bypass',
+    '-Command', windowsCloseBrowserScript(processName),
+  ], { encoding: 'utf8', windowsHide: true });
+  if (result.status !== 0) {
+    const detail = result.stderr.trim() || `exit ${result.status}`;
+    throw new Error(`Unable to close profiled ${browserName} window: ${detail}`);
+  }
+  if (verbose && result.stdout) process.stderr.write(result.stdout);
+}
+
 export async function launchBrowser(
   browserName: BrowserName,
   binaryPath: string,
@@ -161,7 +235,7 @@ export async function launchBrowser(
 
   if (browserName === 'firefox') {
     writeFirefoxUserJs(profileDir);
-    browserArgs = ['-no-remote', '-profile', profileDir, url];
+    browserArgs = firefoxBrowserArgs(profileDir, url);
     browserEnv = { ...process.env, MOZ_ENABLE_WAYLAND: '0' };
     if (samplyOutput) {
       browserEnv.IONPERF = 'func';
@@ -180,10 +254,15 @@ export async function launchBrowser(
   const commandArgs = wrapWithSamply
     ? samplyRecordArgs(executablePath, browserArgs, samplyOutput)
     : browserArgs;
-  const proc = spawn(command, commandArgs, {
+  const invocation = browserSpawnInvocation(command, commandArgs);
+  const externalWindowsWrapper = process.platform === 'win32'
+    && !wrapWithSamply
+    && /\.(?:cmd|bat)$/i.test(executablePath);
+  const proc = spawn(invocation.command, invocation.args, {
     detached: wrapWithSamply,
     stdio: ['ignore', 'ignore', 'pipe'],
     env: browserEnv,
+    windowsVerbatimArguments: invocation.windowsVerbatimArguments,
   });
 
   const stderrChunks: Buffer[] = [];
@@ -219,10 +298,17 @@ export async function launchBrowser(
         if (!processExited && proc.pid) {
           try { process.kill(-proc.pid, 'SIGINT'); } catch { /* already dead */ }
         }
+      } else if (externalWindowsWrapper && proc.pid) {
+        // FooFrix passes a .cmd wrapper which owns Samply. Close only the real
+        // browser window, then keep cmd.exe alive until Samply has converted
+        // the ETW trace and the complete wrapper chain exits naturally.
+        closeWrappedBrowserOnWindows(browserName, verbose);
       } else {
         try { proc.kill('SIGTERM'); } catch { /* already dead */ }
       }
-      if (!processExited) await waitForExit(proc, wrapWithSamply ? 300_000 : 30_000);
+      if (!processExited) {
+        await waitForExit(proc, wrapWithSamply || externalWindowsWrapper ? 300_000 : 30_000);
+      }
 
       try { rmSync(profileDir, { recursive: true, force: true }); } catch { /* ignore */ }
     },
