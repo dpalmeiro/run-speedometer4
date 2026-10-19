@@ -1,6 +1,6 @@
 # run-speedometer4
 
-Automated Speedometer 4 benchmark runner. Serves the benchmark locally, launches a browser, waits for results, and outputs `{ "score": <number> }` to stdout as JSON.
+Automated Speedometer 4 benchmark runner. Serves the benchmark locally, launches a browser, waits for results, and outputs the overall score plus a structured subtest breakdown to stdout as JSON.
 
 ## Build & test
 
@@ -35,7 +35,7 @@ On macOS, pass `.app` bundles — the browser launcher handles them directly via
 1. Binds an HTTP server to a random localhost port
 2. Launches the browser pointing at `http://127.0.0.1:<port>/?iterationCount=N&startAutomatically&tags=sp4` by default
 3. The server injects a small integration module that hooks `didFinishLastIteration()` and POSTs results to `/report`
-4. Server extracts the mean score and the CLI prints `{ "score": <number> }`
+4. Server extracts the mean score and normalized subtest metrics and the CLI prints them as JSON
 
 ## Configs
 

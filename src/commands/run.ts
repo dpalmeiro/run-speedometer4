@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { startServer, extractScore } from '../server.js';
+import { startServer, extractResult } from '../server.js';
 import { launchBrowser, type BrowserName } from '../browser.js';
 
 export function iterationsForSuite(suite?: string): number {
@@ -20,7 +20,7 @@ export function selectionParam(suite?: string, tags?: string): string {
 
 export function runCommand(): Command {
   return new Command('run')
-    .description('Run Speedometer 4 and output score as JSON')
+    .description('Run Speedometer 4 and output score and subtest breakdown as JSON')
     .option('--firefox <path>', 'Path to Firefox binary (or BROWSER_BINARY env var)')
     .option('--chrome <path>', 'Path to Chrome binary (or BROWSER_BINARY env var)')
     .option('--suite <name>', 'Run a single Speedometer 4 suite (e.g. NewsSite-Nuxt)')
@@ -70,8 +70,7 @@ export function runCommand(): Command {
         );
 
         const payload = await Promise.race([server.waitForReport(), browser.exited]);
-        const score = extractScore(payload);
-        console.log(JSON.stringify({ score }));
+        console.log(JSON.stringify(extractResult(payload)));
       } catch (e) {
         console.error(JSON.stringify({ error: (e as Error).message }));
         exitCode = 1;

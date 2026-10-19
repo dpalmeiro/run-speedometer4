@@ -36,7 +36,7 @@ client.didFinishLastIteration = async (metrics, ...args) => {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      'Speedometer-4': { metrics: { Score: { current: [scores] } } },
+      'Speedometer-4': { metrics: { Score: { current: [scores] }, breakdown: metrics } },
     }),
   });
 };
@@ -46,8 +46,32 @@ export interface ReportPayload {
   'Speedometer-4': {
     metrics: {
       Score: { current: number[][] };
+      breakdown?: Record<string, SerializedMetric>;
     };
   };
+}
+
+export interface SerializedMetric {
+  name?: string;
+  unit?: string;
+  values?: number[];
+  mean?: number;
+}
+
+export interface BenchmarkBreakdownEntry {
+  suite_id: string;
+  subtest_id: string;
+  label: string;
+  unit: string;
+  higher_is_better: boolean;
+  samples: number[];
+  mean: number;
+  stddev: number;
+}
+
+export interface BenchmarkResult {
+  score: number;
+  breakdown: BenchmarkBreakdownEntry[];
 }
 
 const REPORT_TIMEOUT_MS = 20 * 60 * 1000;
@@ -168,4 +192,48 @@ export function extractScore(payload: ReportPayload): number {
   if (!scores || scores.length === 0) throw new Error('No scores in report payload');
   const mean = scores.reduce((a, b) => a + b, 0) / scores.length;
   return Math.round(mean * 100) / 100;
+}
+
+function stableId(value: string): string {
+  return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+function standardDeviation(values: number[], mean: number): number {
+  if (values.length < 2) return 0;
+  const variance = values.reduce((sum, value) => sum + ((value - mean) ** 2), 0) / values.length;
+  return Math.sqrt(variance);
+}
+
+export function extractBreakdown(payload: ReportPayload): BenchmarkBreakdownEntry[] {
+  const metrics = payload['Speedometer-4'].metrics.breakdown ?? {};
+  const ignored = new Set(['Score', 'Geomean', 'Prepare']);
+  return Object.entries(metrics).flatMap(([key, metric]) => {
+    const name = metric.name || key;
+    if (ignored.has(name) || name.startsWith('Iteration-')) return [];
+    const samples = Array.isArray(metric.values)
+      ? metric.values.filter((value): value is number => Number.isFinite(value))
+      : [];
+    if (!samples.length) return [];
+    const segments = name.split('/').filter(Boolean);
+    if (segments.length > 2) return [];
+    const suite = segments[0] || name;
+    const subtest = segments.slice(1).join('/') || '__total__';
+    const mean = Number.isFinite(metric.mean)
+      ? metric.mean!
+      : samples.reduce((sum, value) => sum + value, 0) / samples.length;
+    return [{
+      suite_id: stableId(suite),
+      subtest_id: subtest === '__total__' ? subtest : stableId(subtest),
+      label: name,
+      unit: metric.unit || 'ms',
+      higher_is_better: false,
+      samples,
+      mean,
+      stddev: standardDeviation(samples, mean),
+    }];
+  });
+}
+
+export function extractResult(payload: ReportPayload): BenchmarkResult {
+  return { score: extractScore(payload), breakdown: extractBreakdown(payload) };
 }
