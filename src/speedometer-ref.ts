@@ -9,8 +9,13 @@ export const SPEEDOMETER_REFS_DIR = join(ROOT_DIR, 'speedometer-refs');
 
 export type GitRunner = (cwd: string, args: string[]) => string;
 
+// Worker installers may clone the runner as another account (LocalSystem on
+// Windows), so git's ownership check would refuse these runner-owned checkouts.
 const runGit: GitRunner = (cwd, args) =>
-  execFileSync('git', ['-C', cwd, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+  execFileSync('git', ['-c', 'safe.directory=*', '-C', cwd, ...args], {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  }).trim();
 
 export function isValidSpeedometerRef(ref: string): boolean {
   return /^[A-Za-z0-9][A-Za-z0-9._/-]{0,199}$/.test(ref)
