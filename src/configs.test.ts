@@ -54,4 +54,18 @@ describe('Speedometer 4 configs', () => {
       expect(config.ci_test_suite, file).toBe('speedometer-experimental');
     }
   });
+
+  it('pins every preview config to a full mozilla/Speedometer commit and a suite', () => {
+    const previews = readdirSync(configsDir).filter((file) => file.startsWith('preview-') && file.endsWith('.json'));
+    expect(previews.length).toBeGreaterThan(0);
+    for (const file of previews) {
+      const config = JSON.parse(readFileSync(join(configsDir, file), 'utf8'));
+      for (const command of [config.command, config.modes.profile.command]) {
+        const ref = command[command.indexOf('--speedometer-ref') + 1];
+        expect(ref, file).toMatch(/^[0-9a-f]{40}$/);
+        expect(command[command.indexOf('--suite') + 1], file).toBeTruthy();
+      }
+      expect(config.ci_test_suite, file).toBeUndefined();
+    }
+  });
 });

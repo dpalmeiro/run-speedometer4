@@ -1,7 +1,7 @@
 import { createServer, IncomingMessage, ServerResponse } from 'http';
 import { createReadStream, existsSync, readFileSync, statSync } from 'fs';
 import { join, extname } from 'path';
-import { fileURLToPath } from 'url';
+import { DEFAULT_SPEEDOMETER_DIR } from './speedometer-ref.js';
 
 const MIME: Record<string, string> = {
   '.html': 'text/html',
@@ -14,7 +14,6 @@ const MIME: Record<string, string> = {
   '.wasm': 'application/wasm',
 };
 
-const SP4_DIR = join(fileURLToPath(import.meta.url), '../../speedometer');
 const CLIENT_PATH = '/run-speedometer4-client.mjs';
 const CLIENT_SCRIPT = `
 const client = globalThis.benchmarkClient;
@@ -82,8 +81,8 @@ export interface ServerHandle {
   close(): void;
 }
 
-export function startServer(opts: { verbose?: boolean } = {}): Promise<ServerHandle> {
-  const { verbose = false } = opts;
+export function startServer(opts: { verbose?: boolean; root?: string } = {}): Promise<ServerHandle> {
+  const { verbose = false, root = DEFAULT_SPEEDOMETER_DIR } = opts;
   return new Promise((resolve, reject) => {
     let reportResolve: ((payload: ReportPayload) => void) | null = null;
     let reportReject: ((err: Error) => void) | null = null;
@@ -146,7 +145,7 @@ export function startServer(opts: { verbose?: boolean } = {}): Promise<ServerHan
 
       const pathname = url.split('?')[0];
       const filePath = pathname === '/' ? '/index.html' : pathname;
-      const fullPath = join(SP4_DIR, filePath);
+      const fullPath = join(root, filePath);
 
       let resolvedPath = fullPath;
       if (existsSync(fullPath) && statSync(fullPath).isDirectory()) {
@@ -160,7 +159,7 @@ export function startServer(opts: { verbose?: boolean } = {}): Promise<ServerHan
 
       const mime = MIME[extname(resolvedPath)] ?? 'application/octet-stream';
       res.writeHead(200, { 'Content-Type': mime });
-      if (resolvedPath === join(SP4_DIR, 'index.html')) {
+      if (resolvedPath === join(root, 'index.html')) {
         const html = readFileSync(resolvedPath, 'utf8').replace(
           '</head>',
           `        <script src="${CLIENT_PATH}" type="module"></script>\n    </head>`,

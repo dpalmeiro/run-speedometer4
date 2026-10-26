@@ -46,3 +46,17 @@ lumix benchmark ~/src/run-speedometer4/configs/sp4-full.json --firefox /path/to/
 ```
 
 `sp4-full.json` runs all workloads tagged `sp4`. Individual suite configs select their suite explicitly.
+
+## Preview branches
+
+`--speedometer-ref <branch-or-commit>` serves a `mozilla/Speedometer` branch or
+commit instead of the bundled `speedometer` submodule. The runner fetches it
+into a detached worktree under `speedometer-refs/` (git-ignored) and reuses an
+already checked-out commit without network access.
+
+`configs/preview-*.json` run workloads that only exist on such branches, e.g.
+`preview-chatroom-svelte.json` runs `ChatRoom-Svelte` from the
+`chatroom-svelte` branch. Preview configs pin a full commit ID so every run in
+an optimize job measures the same workload; move to a newer commit by editing
+the config. They have no `ci_test_suite` because CI's
+`speedometer-experimental` suite does not contain these workloads.

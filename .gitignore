@@ -211,3 +211,4 @@ dist/
 *.js.map
 *.tgz
 .claude/
+speedometer-refs/

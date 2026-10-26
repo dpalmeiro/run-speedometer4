@@ -1,0 +1,15 @@
+{
+  "name": "speedometer4-preview-chatroom-svelte",
+  "description": "ChatRoom-Svelte from the unmerged mozilla/Speedometer chatroom-svelte branch, pinned to d32c7419. Not part of CI's speedometer-experimental suite.",
+  "unit": "runs/min",
+  "higher_is_better": true,
+  "command": ["run-speedometer4", "--speedometer-ref", "d32c74199fcf59ba57108e7fd196e48bc7f4721e", "--suite", "ChatRoom-Svelte"],
+  "browsers": ["firefox", "chrome"],
+  "binary": {"type": "arg", "flag": "--firefox"},
+  "binary_by_browser": {"chrome": {"type": "arg", "flag": "--chrome"}},
+  "modes": {
+    "profile": {
+      "command": ["run-speedometer4", "--speedometer-ref", "d32c74199fcf59ba57108e7fd196e48bc7f4721e", "--suite", "ChatRoom-Svelte"]
+    }
+  }
+}

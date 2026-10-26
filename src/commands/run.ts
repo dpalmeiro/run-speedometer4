@@ -1,6 +1,7 @@
 import { Command } from 'commander';
 import { startServer, extractResult } from '../server.js';
 import { launchBrowser, type BrowserName } from '../browser.js';
+import { resolveSpeedometerDir } from '../speedometer-ref.js';
 
 export function iterationsForSuite(suite?: string): number {
   return suite ? 100 : 10;
@@ -25,6 +26,7 @@ export function runCommand(): Command {
     .option('--chrome <path>', 'Path to Chrome binary (or BROWSER_BINARY env var)')
     .option('--suite <name>', 'Run a single Speedometer 4 suite (e.g. NewsSite-Nuxt)')
     .option('--tags <tags>', 'Comma-separated Speedometer 4 suite tags (defaults to sp4)')
+    .option('--speedometer-ref <ref>', 'Serve this mozilla/Speedometer branch or commit instead of the bundled checkout')
     .option('--samply <output>', 'Record a samply profile and save to this path')
     .option('--disable-chrome-sandbox', 'Launch Chrome with --no-sandbox')
     .option('--verbose', 'Print progress updates to stdout')
@@ -56,7 +58,9 @@ export function runCommand(): Command {
       let browser;
       let exitCode = 0;
       try {
-        server = await startServer({ verbose });
+        const root = resolveSpeedometerDir(opts.speedometerRef);
+        if (verbose && opts.speedometerRef) process.stdout.write(`[run-speedometer4] serving ${opts.speedometerRef} from ${root}\n`);
+        server = await startServer({ verbose, root });
         const selection = selectionParam(opts.suite, opts.tags);
         const url = `http://127.0.0.1:${server.port}/?iterationCount=${iterations}&startAutomatically${selection}`;
         if (verbose) process.stdout.write(`[run-speedometer4] launching ${browserName}: ${url}\n`);
